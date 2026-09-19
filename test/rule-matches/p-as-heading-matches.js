@@ -1,13 +1,9 @@
 describe('p-as-heading-matches', () => {
+  const queryFixture = axe.testUtils.queryFixture;
   let rule;
-  const fixture = document.getElementById('fixture');
 
   beforeEach(() => {
     rule = axe.utils.getRule('p-as-heading');
-  });
-
-  afterEach(() => {
-    fixture.innerHTML = '';
   });
 
   it('is a function', () => {
@@ -15,59 +11,70 @@ describe('p-as-heading-matches', () => {
   });
 
   it('matches p elements', () => {
-    fixture.innerHTML = '<p id="target">some text</p><p>some other text</p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p id="target">some text</p><p>some other text</p>'
+    );
 
-    assert.isTrue(rule.matches(target));
+    assert.isTrue(rule.matches(vNode.actualNode, vNode));
+  });
+
+  it('ignores p elements with an explicit heading role', () => {
+    const vNode = queryFixture(
+      '<p id="target" role="heading" aria-level="1">some text</p><p>some other text</p>'
+    );
+
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 
   it('ignores the last p element in a list of children', () => {
-    fixture.innerHTML = '<p>some text</p><p id="target">some other text</p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p>some text</p><p id="target">some other text</p>'
+    );
 
-    assert.isFalse(rule.matches(target));
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 
   it('ignores p elements that contains punctuation marks', () => {
-    fixture.innerHTML =
-      '<p id="target">A text. Paragraph?</p><p>some other text</p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p id="target">A text. Paragraph?</p><p>some other text</p>'
+    );
 
-    assert.isFalse(rule.matches(target));
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 
   it('matches p elements with a single punctuation mark', () => {
-    fixture.innerHTML = '<p id="target">A paragraph?</p><p>some other text</p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p id="target">A paragraph?</p><p>some other text</p>'
+    );
 
-    assert.isTrue(rule.matches(target));
+    assert.isTrue(rule.matches(vNode.actualNode, vNode));
   });
 
   it('ignores p elements that have no text-like characters', () => {
-    fixture.innerHTML = '<p id="target"> \n\t\r </p><p>some other text</p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p id="target"> \n\t\r </p><p>some other text</p>'
+    );
 
-    assert.isFalse(rule.matches(target));
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 
   it('ignores siblings that are not p elements', () => {
-    fixture.innerHTML =
-      '<p id="target">some text</p><div></div><p>some other text</p>';
-    let target = fixture.querySelector('#target');
+    let vNode = queryFixture(
+      '<p id="target">some text</p><div></div><p>some other text</p>'
+    );
 
-    assert.isTrue(rule.matches(target));
+    assert.isTrue(rule.matches(vNode.actualNode, vNode));
 
-    fixture.innerHTML = '<p id="target">some text</p><div></div>';
-    target = fixture.querySelector('#target');
+    vNode = queryFixture('<p id="target">some text</p><div></div>');
 
-    assert.isFalse(rule.matches(target));
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 
   it('ignores empty p elements as siblings', () => {
-    fixture.innerHTML =
-      '<p id="target">some text</p><p> <!-- nothing here --><img src="" alt="" /></p>';
-    const target = fixture.querySelector('#target');
+    const vNode = queryFixture(
+      '<p id="target">some text</p><p> <!-- nothing here --><img src="" alt="" /></p>'
+    );
 
-    assert.isFalse(rule.matches(target));
+    assert.isFalse(rule.matches(vNode.actualNode, vNode));
   });
 });
